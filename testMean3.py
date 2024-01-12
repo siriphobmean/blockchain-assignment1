@@ -94,3 +94,5 @@ def is_chain_valid():
 
 if __name__ == '__main__':
     app.run()
+
+# link : https://chat.openai.com/c/8fc7496d-403c-4baf-85bf-ae4972af5a51
