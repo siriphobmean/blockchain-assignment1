@@ -10,7 +10,7 @@ class Blockchain:
     # สร้าง Block ขึ้นมาในระบบ Blockchain   
     def create_block(self, nonce, previous_hash):
         # เก็บส่วนประกอบของ Block แต่ละ Block
-        block={
+        block = {
             "index":len(self.chain)+1,
             "timestamp":str(datetime.datetime.now()),
             "nonce":nonce,
