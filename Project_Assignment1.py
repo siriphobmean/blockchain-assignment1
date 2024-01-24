@@ -93,8 +93,9 @@ def get_chain():
         "chain": blockchain.chain,
         "length": len(blockchain.chain)
     }
-    for block in blockchain.chain:
-        block["hash"] = blockchain.hash(block)
+    response["chain"] = [
+        {**block, "hash": blockchain.hash(block)} for block in response["chain"]
+    ]
     return jsonify(response), 200
 
 @app.route('/mine', methods=["GET"])
