@@ -157,6 +157,37 @@ def is_valid():
         response = {"message": "Have Problem, Blockchain is not Valid"}
     return jsonify(response), 200
 
+# เพิ่ม endpoint สำหรับแก้ไขข้อมูลใน Block ที่ index = 5
+@app.route('/edit', methods=["GET"])
+def edit_data():
+    # ตรวจสอบว่ามี Block อยู่หรือไม่
+    if len(blockchain.chain) < 6:
+        response = {"message": "Blockchain does not have enough blocks"}
+        return jsonify(response), 400
+    
+    # ดึง Block ที่ index = 5 จาก Chain
+    block_to_edit = blockchain.chain[5]
+    
+    # แก้ไขข้อมูลใน Block ที่ index = 5
+    block_to_edit["data"]["สาขาวิชา"] = "วิศวกรรม"
+    block_to_edit["data"]["จำนวนนักศึกษา(ทั้งหมด)"] = "0"
+    block_to_edit["data"]["จำนวนนักศึกษา(ผ่านการคัดเลือกเข้าวิศวะคอม)"] = "5"
+    
+    # ทำการ Rehash Block ที่ index = 5
+    block_to_edit["hash"] = blockchain.hash(block_to_edit)
+    
+    response = {
+        "message": "Data Updated Successfully",
+        "index": block_to_edit["index"],
+        "timestamp": block_to_edit["timestamp"],
+        "data": block_to_edit["data"],
+        "nonce": block_to_edit["nonce"],
+        "previous_hash": block_to_edit["previous_hash"],
+        "hash": block_to_edit["hash"]
+    }
+
+    return jsonify(response), 200
+
 # Run Server
 if __name__ =="__main__":
     app.run()
