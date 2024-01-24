@@ -1,6 +1,7 @@
 import datetime
 import json
 import hashlib
+import random
 from flask import Flask, jsonify
 
 class Blockchain:
@@ -9,20 +10,22 @@ class Blockchain:
         self.chain = [] # List ที่เก็บ Block
         self.year = 2020
         # Genesis Block
-        self.create_block(nonce=1, previous_hash="0", subject="วิศวกรรมคอมพิวเตอร์", score=138.5, student=72) # Genesis Block
+        self.create_block(nonce=1, previous_hash="0", subject="วิศวกรรมคอมพิวเตอร์", score=138.5, scoreUp = 155.5, studentAll=1072, studentCPE=69) # Genesis Block
        
     # สร้าง Block ขึ้นมาในระบบ Blockchain   
-    def create_block(self, nonce, previous_hash, subject, score, student):
+    def create_block(self, nonce, previous_hash, subject, score, scoreUp, studentAll, studentCPE):
         # เก็บส่วนประกอบของ Block แต่ละ Block
         block = {
             "index": len(self.chain)+1,
             "timestamp": str(datetime.datetime.now()),
             "nonce": nonce,
             "data": {
-                "year": self.year,
-                "subject": subject,
-                "score": score,
-                "student": student
+                "ปีการศึกษา": self.year,
+                "สาขาวิชา": subject,
+                "เกรดพ้อยต่ำสุด": score,
+                "เกรดพ้อยสูงสุด": scoreUp,
+                "จำนวนนักศึกษา(ทั้งหมด)": studentAll,
+                "จำนวนนักศึกษา(ผ่านการคัดเลือกเข้าวิศวะคอม)": studentCPE
             },
             "previous_hash": previous_hash
         }
@@ -97,8 +100,10 @@ def get_chain():
 @app.route('/mine', methods=["GET"])
 def mining_block():
     amount = 1
-    point = 1.2
-    people = 2
+    point = round(random.uniform(0.5, 10), 1)
+    pointUp = round(random.uniform(0.5, 10), 1)
+    people = random.randint(100, 150)
+    peopleCPE = random.randint(1, 10)
     blockchain.year = blockchain.year + amount
 
     # ข้อมูลที่จะเก็บใน Block
@@ -106,14 +111,20 @@ def mining_block():
     # ให้คะแนนเริ่มต้นใน Genesis Block เป็น 138.5
     if not blockchain.chain:
         score = 138.5
-        student = 72
+        scoreUp = 155.5
+        studentAll = 1072
+        studentCPE = 69
     else:
         # คำนวณคะแนนใน Block ถัดไป
         previous_block = blockchain.get_previous_block()
-        previous_score = previous_block["data"]["score"]
-        previous_student = previous_block["data"]["student"]
+        previous_score = previous_block["data"]["เกรดพ้อยต่ำสุด"]
+        previous_scoreUp = previous_block["data"]["เกรดพ้อยสูงสุด"]
+        previous_studentAll = previous_block["data"]["จำนวนนักศึกษา(ทั้งหมด)"]
+        previous_studentCPE = previous_block["data"]["จำนวนนักศึกษา(ผ่านการคัดเลือกเข้าวิศวะคอม)"]
         score = round(previous_score + point, 1)  # ปัดเศษทศนิยม
-        student = previous_student + people
+        scoreUp = round(previous_scoreUp + pointUp, 1)  # ปัดเศษทศนิยม
+        studentAll = previous_studentAll + people
+        studentCPE = previous_studentCPE + peopleCPE
 
     # PoW
     previous_block = blockchain.get_previous_block()
@@ -126,11 +137,11 @@ def mining_block():
     previous_hash = blockchain.hash(previous_block)
 
     # Update Block ใหม่
-    block = blockchain.create_block(nonce, previous_hash, subject, score, student)
+    block = blockchain.create_block(nonce, previous_hash, subject, score, scoreUp, studentAll, studentCPE)
     block["hash"] = blockchain.hash(block)
 
     response = {
-        "message": "Mining Block เรียบร้อย",
+        "message": "Mining Block Success",
         "index": block["index"],
         "timestamp": block["timestamp"],
         "data": block["data"],
@@ -147,7 +158,7 @@ def is_valid():
     if is_valid:
         response = {"message": "Blockchain is Valid"}
     else:
-        response = {"message": "Have Problem, Blockchain Is not Valid"}
+        response = {"message": "Have Problem, Blockchain is not Valid"}
     return jsonify(response), 200
 
 # Run Server

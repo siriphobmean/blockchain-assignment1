@@ -1,7 +1,8 @@
 import datetime
 import json
 import hashlib
-from flask import Flask, jsonify, request
+import random
+from flask import Flask, jsonify
 
 class Blockchain:
     def __init__(self):
@@ -9,16 +10,23 @@ class Blockchain:
         self.chain = [] # List ที่เก็บ Block
         self.year = 2020
         # Genesis Block
-        self.create_block(nonce=1, previous_hash="0") # Genesis Block
+        self.create_block(nonce=1, previous_hash="0", subject="วิศวกรรมคอมพิวเตอร์", score=138.5, scoreUp = 155.5, studentAll=1072, studentCPE=69) # Genesis Block
        
     # สร้าง Block ขึ้นมาในระบบ Blockchain   
-    def create_block(self, nonce, previous_hash):
+    def create_block(self, nonce, previous_hash, subject, score, scoreUp, studentAll, studentCPE):
         # เก็บส่วนประกอบของ Block แต่ละ Block
         block = {
             "index": len(self.chain)+1,
             "timestamp": str(datetime.datetime.now()),
             "nonce": nonce,
-            "data": self.year,
+            "data": {
+                "ปีการศึกษา": self.year,
+                "สาขาวิชา": subject,
+                "เกรดพ้อยต่ำสุด": score,
+                "เกรดพ้อยสูงสุด": scoreUp,
+                "จำนวนนักศึกษา(ทั้งหมด)": studentAll,
+                "จำนวนนักศึกษา(ผ่านการคัดเลือกเข้าวิศวะคอม)": studentCPE
+            },
             "previous_hash": previous_hash
         }
         block["hash"] = self.hash(block)
@@ -44,7 +52,7 @@ class Blockchain:
         # แก้โจทย์ทางคณิตศาสตร์
         while check_proof is False:
             # ได้เลขฐาน 16 มา 1 ชุด
-            hashoperation = hashlib.sha256(str(new_nonce**2 - previous_nonce**2).encode()).hexdigest()
+            hashoperation = hashlib.sha256(str(new_nonce**2 - previous_nonce**2).encode()).hexdigest() # สมมติ Result = 5
             if hashoperation[:4] == "0000":
                 check_proof = True
             else:
@@ -61,7 +69,7 @@ class Blockchain:
                 return False
             previous_nonce = previous_block["nonce"] # Nonce Block ก่อนหน้า
             nonce = block["nonce"] # Nonce ของ Block ที่ตรวจสอบ
-            hashoperation = hashlib.sha256(str(nonce**2 - previous_nonce**2).encode()).hexdigest()
+            hashoperation = hashlib.sha256(str(nonce**2 - previous_nonce**2).encode()).hexdigest() # สมมติ Result = 5
             if hashoperation[:4] != "0000":
                 return False
             previous_block = block
@@ -81,28 +89,10 @@ def hello():
 
 @app.route('/get', methods=["GET"])
 def get_chain():
-    # Get the number of blocks to generate from the query parameters
-    num_blocks = int(request.args.get('num_blocks', 10))
-
-    # Generate the specified number of blocks
-    for i in range(1, num_blocks + 1):  # Start from 1 to correctly update the year
-        previous_block = blockchain.get_previous_block()
-        previous_nonce = previous_block["nonce"]
-        nonce = blockchain.proof_of_work(previous_nonce)
-        previous_hash = blockchain.hash(previous_block)
-        block = blockchain.create_block(nonce, previous_hash)
-        
-        # Update the year based on the index
-        block["data"] = 2020 + i
-        
-        blockchain.chain[-1] = block  # Update the last block in the chain
-
     response = {
-        "message": f"Generated {num_blocks} blocks successfully",
         "chain": blockchain.chain,
         "length": len(blockchain.chain)
     }
-    # เพิ่ม hash ของแต่ละ block ใน response
     for block in blockchain.chain:
         block["hash"] = blockchain.hash(block)
     return jsonify(response), 200
@@ -110,39 +100,65 @@ def get_chain():
 @app.route('/mine', methods=["GET"])
 def mining_block():
     amount = 1
-    blockchain.year = blockchain.year+amount
+    point = round(random.uniform(0.5, 10), 1)
+    pointUp = round(random.uniform(0.5, 10), 1)
+    people = random.randint(55, 150)
+    peopleCPE = random.randint(1, 10)
+    blockchain.year = blockchain.year + amount
+
+    # ข้อมูลที่จะเก็บใน Block
+    subject = "วิศวกรรมคอมพิวเตอร์"
+    # ให้คะแนนเริ่มต้นใน Genesis Block เป็น 138.5
+    if not blockchain.chain:
+        score = 138.5
+        scoreUp = 155.5
+        studentAll = 1072
+        studentCPE = 69
+    else:
+        # คำนวณคะแนนใน Block ถัดไป
+        previous_block = blockchain.get_previous_block()
+        previous_score = previous_block["data"]["เกรดพ้อยต่ำสุด"]
+        previous_scoreUp = previous_block["data"]["เกรดพ้อยสูงสุด"]
+        previous_studentAll = previous_block["data"]["จำนวนนักศึกษา(ทั้งหมด)"]
+        previous_studentCPE = previous_block["data"]["จำนวนนักศึกษา(ผ่านการคัดเลือกเข้าวิศวะคอม)"]
+        score = round(previous_score + point, 1)  # ปัดเศษทศนิยม
+        scoreUp = round(previous_scoreUp + pointUp, 1)  # ปัดเศษทศนิยม
+        studentAll = previous_studentAll + people
+        studentCPE = previous_studentCPE + peopleCPE
+
     # PoW
     previous_block = blockchain.get_previous_block()
     previous_nonce = previous_block["nonce"]
+
     # หาค่า Nonce ที่เหมาะสม
     nonce = blockchain.proof_of_work(previous_nonce)
+
     # หา Hash ของ Block ก่อนหน้ามาใช้งาน
     previous_hash = blockchain.hash(previous_block)
+
     # Update Block ใหม่
-    block = blockchain.create_block(nonce, previous_hash)
-    # เพิ่ม hash ของ block ที่ถูกขุดใน response
+    block = blockchain.create_block(nonce, previous_hash, subject, score, scoreUp, studentAll, studentCPE)
     block["hash"] = blockchain.hash(block)
+
     response = {
-        "message": "Mining Block เรียบร้อย",
-        "index":  block["index"],
+        "message": "Mining Block Success",
+        "index": block["index"],
         "timestamp": block["timestamp"],
         "data": block["data"],
         "nonce": block["nonce"],
         "previous_hash": block["previous_hash"],
-        "hash": block["hash"]  # เพิ่ม hash ของ block ใน response
+        "hash": block["hash"]
     }
+
     return jsonify(response), 200
 
 @app.route('/valid', methods=["GET"])
 def is_valid():
     is_valid = blockchain.is_chain_valid(blockchain.chain)
     if is_valid:
-        response = {
-            "message": "Blockchain is Valid",
-            "hashes": [blockchain.hash(block) for block in blockchain.chain]  # เพิ่ม hash ของแต่ละ block ใน response
-            }
+        response = {"message": "Blockchain is Valid"}
     else:
-        response = {"message": "Have Problem, Blockchain Is not Valid"}
+        response = {"message": "Have Problem, Blockchain is not Valid"}
     return jsonify(response), 200
 
 # Run Server
