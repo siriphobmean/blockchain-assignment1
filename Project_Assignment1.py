@@ -10,7 +10,7 @@ class Blockchain:
         self.chain = [] # List ที่เก็บ Block
         self.year = 2020
         # Genesis Block
-        self.create_block(nonce=1, previous_hash="0", subject="วิศวกรรมคอมพิวเตอร์", score=138.5, scoreUp = 155.5, studentAll=1072, studentCPE=69) # Genesis Block
+        self.create_block(nonce=1, previous_hash="0", subject="วิศวกรรมคอมพิวเตอร์", score=138.5, scoreUp = 155.5, studentAll=1072, studentCPE=69)
        
     # สร้าง Block ขึ้นมาในระบบ Blockchain   
     def create_block(self, nonce, previous_hash, subject, score, scoreUp, studentAll, studentCPE):
@@ -52,7 +52,7 @@ class Blockchain:
         # แก้โจทย์ทางคณิตศาสตร์
         while check_proof is False:
             # ได้เลขฐาน 16 มา 1 ชุด
-            hashoperation = hashlib.sha256(str(new_nonce**2 - previous_nonce**2).encode()).hexdigest() # สมมติ Result = 5
+            hashoperation = hashlib.sha256(str(new_nonce**2 - previous_nonce**2).encode()).hexdigest()
             if hashoperation[:4] == "0000":
                 check_proof = True
             else:
@@ -69,7 +69,7 @@ class Blockchain:
                 return False
             previous_nonce = previous_block["nonce"] # Nonce Block ก่อนหน้า
             nonce = block["nonce"] # Nonce ของ Block ที่ตรวจสอบ
-            hashoperation = hashlib.sha256(str(nonce**2 - previous_nonce**2).encode()).hexdigest() # สมมติ Result = 5
+            hashoperation = hashlib.sha256(str(nonce**2 - previous_nonce**2).encode()).hexdigest()
             if hashoperation[:4] != "0000":
                 return False
             previous_block = block
@@ -105,24 +105,20 @@ def mining_block():
     people = random.randint(55, 150)
     peopleCPE = random.randint(1, 10)
     blockchain.year = blockchain.year + amount
-
-    # ข้อมูลที่จะเก็บใน Block
     subject = "วิศวกรรมคอมพิวเตอร์"
-    # ให้คะแนนเริ่มต้นใน Genesis Block เป็น 138.5
     if not blockchain.chain:
         score = 138.5
         scoreUp = 155.5
         studentAll = 1072
         studentCPE = 69
     else:
-        # คำนวณคะแนนใน Block ถัดไป
         previous_block = blockchain.get_previous_block()
         previous_score = previous_block["data"]["เกรดพ้อยต่ำสุด"]
         previous_scoreUp = previous_block["data"]["เกรดพ้อยสูงสุด"]
         previous_studentAll = previous_block["data"]["จำนวนนักศึกษา(ทั้งหมด)"]
         previous_studentCPE = previous_block["data"]["จำนวนนักศึกษา(ผ่านการคัดเลือกเข้าวิศวะคอม)"]
-        score = round(previous_score + point, 1)  # ปัดเศษทศนิยม
-        scoreUp = round(previous_scoreUp + pointUp, 1)  # ปัดเศษทศนิยม
+        score = round(previous_score + point, 1)
+        scoreUp = round(previous_scoreUp + pointUp, 1)
         studentAll = previous_studentAll + people
         studentCPE = previous_studentCPE + peopleCPE
 
